@@ -1,0 +1,18 @@
+{
+    "name": "Flexy.Core",
+    "rootNamespace": "Flexy.Core",
+    "references": [
+        "GUID:f51ebe6a0ceec4240a699833d6309b23",
+        "GUID:fe25561d224ed4743af4c60938a59d0b",
+        "GUID:0500b42cb82258245a8ba6d879e1c446"
+    ],
+    "includePlatforms": [],
+    "excludePlatforms": [],
+    "allowUnsafeCode": false,
+    "overrideReferences": false,
+    "precompiledReferences": [],
+    "autoReferenced": true,
+    "defineConstraints": [],
+    "versionDefines": [],
+    "noEngineReferences": false
+}

@@ -1,0 +1,15 @@
+{
+  "name": "com.flexy.core",
+  "displayName": "Flexy Core",
+  "version": "5.0.0",
+  "unity": "2022.3",
+  "description": "Core pieces of code & content for use in every flexy tool package",
+  "keywords": [],
+  "category": "",
+  "author": {
+    "name": "Flexy Tools",
+    "email" : "JesObertyukh@gmail.com",
+    "url" : "https://github.com/FlexyTools/Flexy.Core"
+  },
+  "dependencies": {  }
+}
