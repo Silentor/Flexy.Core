@@ -4,9 +4,9 @@ using UnityEngine;
 namespace Flexy.Core.Editor
 {
 	[InitializeOnLoad]
-	public class SceneSwitchLeftButton
+	public class ProjectNameOnToolbar
 	{
-		static SceneSwitchLeftButton()
+		static ProjectNameOnToolbar()
 		{
 			UnityEditorTopToolbar.AddIMGUIContainerToLeftPocket( OnToolbarGUI );
 		}

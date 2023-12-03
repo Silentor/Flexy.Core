@@ -16,21 +16,21 @@ namespace Flexy.Core.Editor
 			EditorApplication.update += EditorUpdate;
 		}
 
-		public static void AddIMGUIContainerToLeftPocket	( Action onGUI ) => AddVisualElementToLeftPocket	( new IMGUIContainer(()=>ImguiUI(onGUI)){ style = { flexGrow = 1}} );
-		public static void AddIMGUIContainerToRightPocket	( Action onGUI ) => AddVisualElementToRightPocket	( new IMGUIContainer(()=>ImguiUI(onGUI)){ style = { flexGrow = 1}} );
+		public static void AddIMGUIContainerToLeftPocket	( Action onGUI ) => AddVisualElementToLeftPocket	( new IMGUIContainer(()=>ImguiUI(onGUI)){ style = { flexGrow = 1, flexDirection = FlexDirection.Row}} );
+		public static void AddIMGUIContainerToRightPocket	( Action onGUI ) => AddVisualElementToRightPocket	( new IMGUIContainer(()=>ImguiUI(onGUI)){ style = { flexGrow = 1, flexDirection = FlexDirection.Row}} );
 		public static void AddVisualElementToLeftPocket		( VisualElement e )
 		{
-			var ve = new VisualElement( ){ style = { flexGrow = 1, flexDirection = FlexDirection.Row } };
-			LeftPocket.Add( ve );
-			ve.Add( e );
+			//var ve = new VisualElement( ){ style = { flexGrow = 1, flexDirection = FlexDirection.Row } };
+			LeftPocket.Add( e );
+			//ve.Add( e );
 		}
 		public static void AddVisualElementToRightPocket	( VisualElement e )
 		{
 			RightPocket.Add( e );
 		}
 
-		private static readonly VisualElement LeftPocket	= new( ){ style = { flexGrow = 1, flexDirection = FlexDirection.Row } };
-		private static readonly VisualElement RightPocket	= new( ){ style = { flexGrow = 1, flexDirection = FlexDirection.Row } };
+		private static readonly VisualElement LeftPocket	= new( ){ name = "Left Pocket", style = { flexGrow = 1, flexDirection = FlexDirection.Row } };
+		private static readonly VisualElement RightPocket	= new( ){ name = "Right Pocket", style = { flexGrow = 1, flexDirection = FlexDirection.Row } };
 
 		private static ScriptableObject _editorToolbarPanel;		
 		
