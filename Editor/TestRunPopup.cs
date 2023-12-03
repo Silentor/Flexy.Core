@@ -4,7 +4,6 @@ using System.Linq;
 using UnityEditor;
 using UnityEditor.SceneManagement;
 using UnityEngine;
-using UnityEngine.SceneManagement;
 using Object = System.Object;
 
 namespace Flexy.Core.Editor;
@@ -18,14 +17,23 @@ public static class TestRunPopup
 		//EditorSceneManager.sceneClosed		+= s		=> EditorPrefs.SetString( Test_Selected, null );
 		EditorSceneManager.sceneOpened		+= (_, _)	=> EditorPrefs.SetString( Test_Selected, null );
 	}
+	[RuntimeInitializeOnLoadMethod]
+	static void CleanUpRun( ) => IsTestLaunched_InThisSession = default;
 
-	private const String Test_Selected	= "Flexy.Core.TestRun: Selected";
+	private const String	Test_Selected	= "Flexy.Core.TestRun: Selected";
+	public static Boolean	IsTestLaunched_InThisSession;
 	
 	public static List<TestRunSource> TestRunSources = new ( );
 	
-	public static String	GetRunName		( )	=>  EditorPrefs.GetString( Test_Selected );
-	
-	private static void		OnTestRunGUI	( )							
+	public static String	GetTestNameToLaunch		( )	
+	{
+		if( IsTestLaunched_InThisSession )
+			return null;
+		
+		IsTestLaunched_InThisSession = true;
+		return EditorPrefs.GetString( Test_Selected );
+	}
+	private static void		OnTestRunGUI			( )	
 	{
 		var style = EditorStyles.label;
 		style.richText = true;
