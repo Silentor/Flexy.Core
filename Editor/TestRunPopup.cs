@@ -23,8 +23,12 @@ public static class TestRunPopup
 	private const String	Test_Selected	= "Flexy.Core.TestRun: Selected";
 	public static Boolean	IsTestLaunched_InThisSession;
 	
-	public static List<TestRunSource> TestRunSources = new ( );
+	private static List<TestRunSource> TestRunSources = new ( );
 	
+	public static void		AddTestSource			( String name, Func<IEnumerable<String>> testsCollectionProvider )
+	{
+		TestRunSources.Add( new( name, testsCollectionProvider ) );	
+	}
 	public static String	GetTestNameToLaunch		( )	
 	{
 		if( IsTestLaunched_InThisSession )
@@ -85,6 +89,6 @@ public static class TestRunPopup
 		
 		static void		SetTestRunName	( Object userdata ) => EditorPrefs.SetString( Test_Selected, (String)userdata );
 	}
-	
-	public record struct TestRunSource ( String Name, Func<IEnumerable<String>>	GetTestRuns );
+
+	private record struct TestRunSource ( String Name, Func<IEnumerable<String>> GetTestRuns );
 }
