@@ -25,17 +25,24 @@ public static class TestRunPopup
 	
 	private static List<TestRunSource> TestRunSources = new ( );
 	
-	public static void		AddTestSource			( String name, Func<IEnumerable<String>> testsCollectionProvider )
+	public static void		AddTestProvider			( String providerName, Func<IEnumerable<String>> testsCollectionProvider )
 	{
-		TestRunSources.Add( new( name, testsCollectionProvider ) );	
+		TestRunSources.Add( new( providerName, testsCollectionProvider ) );	
 	}
-	public static String	GetTestNameToLaunch		( )	
+	public static String	GetTestNameToLaunch		( String providerName )	
 	{
 		if( IsTestLaunched_InThisSession )
 			return null;
 		
-		IsTestLaunched_InThisSession = true;
-		return EditorPrefs.GetString( Test_Selected );
+		var testSelected = EditorPrefs.GetString( Test_Selected ); 
+		
+		if( testSelected.StartsWith( providerName + ": " ) )
+		{
+			IsTestLaunched_InThisSession = true;
+			return testSelected[(providerName.Length+2)..];
+		}
+		
+		return null;
 	}
 	private static void		OnTestRunGUI			( )	
 	{
@@ -74,7 +81,7 @@ public static class TestRunPopup
 
 					foreach ( var testRun in testRuns )
 					{
-						menu.AddItem( new( $" {testRun} " ), false, SetTestRunName, testRun );
+						menu.AddItem( new( $" {testRun} " ), false, SetTestRunName, (testRunSource.Name, testRun) );
 					}
 				}
 				catch (Exception ex) { Debug.LogException(ex); }
@@ -87,7 +94,18 @@ public static class TestRunPopup
 		
 		GUILayout.FlexibleSpace( );
 		
-		static void		SetTestRunName	( Object userdata ) => EditorPrefs.SetString( Test_Selected, (String)userdata );
+		static void		SetTestRunName	( Object userdata )
+		{
+			if( userdata == null )
+			{
+				EditorPrefs.SetString( Test_Selected, null );
+			}
+			else
+			{
+				var pair = ((String prefix, String testName))userdata;
+				EditorPrefs.SetString( Test_Selected, $"{pair.prefix}: {pair.testName}" );
+			}
+		}
 	}
 
 	private record struct TestRunSource ( String Name, Func<IEnumerable<String>> GetTestRuns );
