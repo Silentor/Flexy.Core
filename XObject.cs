@@ -1,8 +1,8 @@
 ﻿using System;
 using System.Collections.Generic;
+using Flexy.Core;
 using Flexy.JsonXs;
 using Flexy.JsonXs.Format;
-using Flexy.Utils.ReadOnlyWrappers;
 using UnityEngine;
 
 namespace Flexy.XAsset
@@ -38,7 +38,7 @@ namespace Flexy.XAsset
         [SerializeReference]
         private List<XComponent> _components = new( );
 
-		public RoList<XComponent> Components => new( _components );
+		public RoList<XComponent> Components => _components;
 
 		public	Boolean		HasComponent<T>		( ) where T : XComponent					
 		{

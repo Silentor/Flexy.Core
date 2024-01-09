@@ -2,11 +2,11 @@
 {
 	public class ServiceInterfaceAttribute: Attribute
 	{
-		public ServiceInterfaceAttribute ( Type interfaceType )
+		public ServiceInterfaceAttribute ( params Type[] interfaceType )
 		{
 			InterfaceType = interfaceType;
 		}
 		
-		public readonly Type InterfaceType;
+		public readonly Type[] InterfaceType;
 	}
 }

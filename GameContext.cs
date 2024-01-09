@@ -1,7 +1,6 @@
 ﻿using System.Linq;
 using System.Reflection;
 using Flexy.Utils;
-using Flexy.Utils.ReadOnlyWrappers;
 using UnityEngine.SceneManagement;
 
 namespace Flexy.Core
@@ -9,114 +8,86 @@ namespace Flexy.Core
 	[DefaultExecutionOrder(Int16.MinValue+2)]
 	public class GameContext : MonoBehaviour
 	{
-		private static	GameContext		_global;
-		private			GameContext		_parent;
-
-		[SerializeField]	String		_name;
-		[SerializeField]	GameObject	_services;
+		[RuntimeInitializeOnLoadMethod(RuntimeInitializeLoadType.SubsystemRegistration)]
+		private static void StaticClear( ) { _global = null; _sceneToCtxRegistry.Clear( ); SceneManager.sceneUnloaded -= ClearSceneFromRegistry; SceneManager.sceneUnloaded += ClearSceneFromRegistry; }
 		
-		public		GameContext			GlobalGameContext	=> _subContexts[0];
-		public		GameContext			TopGameContext		=> _subContexts[^1];
+		[SerializeField]	String			_name;
+		[SerializeField]	GameObject		_services;
 		
-		[InitializeOnLoadMethod(RuntimeInitializeLoadType.SubsystemRegistration)]
-		private static void StaticClear( ) =>  _sceneToCtxRegistry	.Clear( );
-		private static readonly  Dictionary<Int32, GameContext>	_sceneToCtxRegistry = new ( );
+		protected static	GameContext		_global;
+		protected			GameContext		_parent;
 		
+		protected static readonly	Dictionary<Scene, GameContext>	_sceneToCtxRegistry = new ( );
+		private readonly			Dictionary<Type, Object>		_registeredServices	= new ( );
+		
+		public static	GameContext		Global					=> _global ? _global : (_global = CreateGlobalContext());
+			
 		public static 	GameContext		GetCtx					( GameObject go )	=> GetCtx( go.scene );
 		public static 	GameContext		GetCtx					( Component c )		=> GetCtx( c.gameObject.scene );
-		public static 	GameContext		GetCtx					( Scene scene )			
-		{
-			return _sceneToCtxRegistry.TryGetValue(scene.handle, out var ctx) ? ctx._subContexts[^1] : null;
-		}
-		public			void			RegisterGameScene		( Scene scene )			
-		{
-			if( !_sceneToCtxRegistry.TryGetValue( scene.handle, out var ctx) )
-			{
-				_sceneToCtxRegistry.Add( scene.handle, this );
-			}
-			else
-			{
-				ctx._subContexts.Add( this );
-			}
-		}
+		public static 	GameContext		GetCtx					( Scene scene )		=> _sceneToCtxRegistry.TryGetValue( scene, out var ctx ) ? ctx : Global;
+		public			void			RegisterGameScene		( Scene scene )		=> _sceneToCtxRegistry[scene] = this;
 		
-		private readonly List<Object>				_registeredServices		= new ( );
-		private readonly Dictionary<Type, Object>	_registeredServicesDict	= new ( );
-		private readonly List<GameContext>			_subContexts			= new ( );
-
-		public static GameContext	Global					=> _global; 
-		public String				Name					=> _name;
-		public RoList<Object>		RegisteredServices		=> _registeredServices;
-		public RoDict<Type, Object> RegisteredServicesDict	=> _registeredServicesDict;
+		public String					Name					=> _name;
+		public RoDict<Type, Object>		RegisteredServices		=> _registeredServices;
 		
-		public	void	SetName		( String name ) => _name = name;
-
-		protected void	Awake		( )		
+		protected		void			Awake					( )		
 		{
 			if( _global == null )
 			{
 				_global = this;
+				RegisterGameScene( gameObject.scene ); //Register before move to another scene
 				DontDestroyOnLoad( gameObject );
-				if( Time.timeScale == 0 )
-					Time.timeScale = 1;
+			}
+			else
+			{
+				_parent = GetCtx(this);
 			}
 			
 			RegisterGameScene( gameObject.scene );
+			RegisterGameScene( _global.gameObject.scene );
 			
 			if( String.IsNullOrWhiteSpace( _name ) )
 				_name = gameObject.name;
 			
-			_subContexts.Add( this );
-			
-			InitializeServices( );
-			InitializeAsyncServices( ).Forget( Debug.LogException );
-			
-			// _world = this.GetGameWorld( );
-			// _world.AddContext( this );
-			
-			void			InitializeServices				( )		
+			if( _services )
 			{
-				// Add and init All Services in order
-				AddServicesFromObject( gameObject, false );
 				AddServicesFromObject( _services );
 			
-				var ctx = this;
+				InitializeServices		( this );
+				InitializeAsyncServices	( this ).Forget( Debug.LogException );
 				
-				foreach ( var service in ctx.RegisteredServices.ToArray().OfType<IService>( ) )
+				static			void			InitializeServices				( GameContext ctx )		
 				{
-					try						{ service.OrderedInit( this ); }
-					catch ( Exception ex )	{ Debug.LogException( ex ); }
-				}
-			}
-			async	UniTask			InitializeAsyncServices			( )		
-			{
-				// Add and init All Services in order
-				var ctx = this;
-				{
-					foreach ( var service in ctx.RegisteredServices.ToArray().OfType<IServiceAsync>( ) )
+					foreach ( var service in ctx._registeredServices.Values.ToArray().OfType<IService>( ) )
 					{
-						try						{ await service.OrderedInitAsync( this ); }
+						try						{ service.OrderedInit( ctx ); }
+						catch ( Exception ex )	{ Debug.LogException( ex ); }
+					}
+				}
+				static async	UniTask			InitializeAsyncServices			( GameContext ctx )		
+				{
+					foreach ( var service in ctx._registeredServices.Values.ToArray().OfType<IServiceAsync>( ) )
+					{
+						try						{ await service.OrderedInitAsync( ctx ); }
 						catch ( Exception ex )	{ Debug.LogException( ex ); }
 					}
 				}
 			}
 		}                             
-		private void	OnDestroy	( )		
+		protected		void			OnDestroy				( )		
 		{
-			_subContexts.Clear( );
-			if( _sceneToCtxRegistry[gameObject.scene.handle] == this )
-				_sceneToCtxRegistry.Remove( gameObject.scene.handle );
-			//_world.RemoveContext( this );
+			if ( !_parent ) 
+				return;
+			
+			foreach ( var pair in _sceneToCtxRegistry.ToArray( ) )
+			{
+				if( pair.Value == this )
+					_sceneToCtxRegistry[pair.Key] = _parent;
+			}
 		}
 		
 		public 			void			AddServicesFromObject	( GameObject go, Boolean allHierarchy = true )		
 		{
-			if( TopGameContext != this )
-			{
-				TopGameContext.AddServicesFromObject( go, allHierarchy );
-				return;
-			}
-			
 			var services = allHierarchy ? go.GetComponentsInChildren<MonoBehaviour>( ) : go.GetComponents<MonoBehaviour>( );  
 		
 			foreach ( var service in services )
@@ -132,12 +103,11 @@ namespace Flexy.Core
 		}
 		public			T				GetService<T>			( )						where T : class 			
 		{
-			for ( var i = _subContexts.Count - 1; i >= 0; i-- )
-			{
-				var gameContext	= _subContexts[i];
-				if( gameContext._registeredServicesDict.TryGetValue( typeof(T), out var svc ) )
-					return svc as T;
-			}
+			if( _registeredServices.TryGetValue( typeof(T), out var svc ) )
+				return svc as T;
+
+			if( _parent )
+				return _parent.GetService<T>( );
 			
 			return default;
 		}
@@ -145,12 +115,6 @@ namespace Flexy.Core
 		{
 			if( service == null )
 				return;
-			
-			if( TopGameContext != this )
-			{
-				TopGameContext.SetService<TBindFrom>( service );
-				return;
-			}
 			
 			var typeActual	= service.GetType();
 			var typeBase	= typeof(TBindFrom);
@@ -165,36 +129,63 @@ namespace Flexy.Core
 			
 			Debug.Log	( $"[GameWorldBase] - SetService: {typeActual.Name} → {typeActual.Name}" );
 			
-			_registeredServices		.Add( service );
-			_registeredServicesDict	.Add( typeActual, service );
+			_registeredServices.Add( typeActual, service );
 			
 			if( typeBase != typeActual )     
 			{
 				Debug.Log	( $"[GameWorldBase] - SetService: {typeBase.Name} → {typeActual.Name}" );
 				
-				try						{ _registeredServicesDict.Add( typeBase, service ); }
+				try						{ _registeredServices.Add( typeBase, service ); }
 				catch ( Exception ex )	{ Debug.LogException( ex ); }
 			}
 				
 			if( typeActual.GetCustomAttribute<ServiceInterfaceAttribute>( ) is {} si )
 			{
-				if( si.InterfaceType.IsAssignableFrom( typeActual ) )
+				foreach( var serviceType in si.InterfaceType )
 				{
+					if ( !serviceType.IsAssignableFrom( typeActual ) ) 
+						continue;
+					
 					Debug.Log	( $"[GameWorldBase] - SetService: {si.InterfaceType} → {typeActual.Name}" );
-					_registeredServicesDict.Add( si.InterfaceType, service );
+					_registeredServices.Add( serviceType, service );
 				}
 			}	
 		}
 		
-		internal		void			PushContext				( GameContext gameContext )					
+		private static	GameContext		CreateGlobalContext		( )													
 		{
-			_subContexts.Add( gameContext );
+			var go = new GameObject( "Flexy Global Game Context", typeof(GameContext) );
+			DontDestroyOnLoad( go );
+			
+			var ctx = go.GetComponent<GameContext>( );
+			ctx._name = "Flexy Global Game Context";
+			
+			return ctx;
 		}
-		internal		void			PollContext				( GameContext gameContext )					
+		private static 	void			ClearSceneFromRegistry	( Scene scene )										
 		{
-			_subContexts.Remove( gameContext );
+			_sceneToCtxRegistry.Remove( scene );
 		}
-        
+		
+		public static class Internal
+		{
+			public static 	T		GetCtxInParent<T>			( Scene scene ) where T: GameContext				
+			{
+				if ( !_sceneToCtxRegistry.TryGetValue( scene, out var ctx ) ) 
+					return default;
+				
+				while ( ctx )
+				{
+					if ( ctx is T tctx )
+						return tctx;
+					
+					ctx = ctx._parent;
+				}
+				
+				return default;
+			}
+		}
+		
 		#if UNITY_EDITOR
 		[RuntimeInspectorUI( Repaint = true )]
 		public void RuntimeGUI	( )		
@@ -204,16 +195,50 @@ namespace Flexy.Core
 			
 			GUILayout.Space( 10 );
 			GUILayout.Label( "Registered Services:" );
-			GUILayout.Space( 5 );
 			
-			DrawServices( );
-		}
-		public void DrawServices( )		
-		{
-			for (var i = _subContexts.Count - 1; i >= 0; i--)
+			if( _parent )
 			{
 				GUILayout.Space( 5 );
-				DrawCtx( _subContexts[i] );
+				DrawCtx( this );
+				GUILayout.Space( 5 );
+				DrawCtx( _parent );
+			}
+			else
+			{
+				var ctxs = FindObjectsByType<GameContext>( FindObjectsInactive.Include, FindObjectsSortMode.None );
+
+				Array.Sort( ctxs, ( l, r ) => IsInParent( l, r ) ? -1 : 1 );
+				
+				static Boolean IsInParent( GameContext l, GameContext r )
+				{
+					for ( var ctx = l._parent; ctx != null; ctx = ctx._parent )
+						if( ctx == r )
+							return true;
+					
+					return false;
+				}
+				
+				foreach ( var context in ctxs )
+				{
+					GUILayout.Space( 5 );
+					DrawCtx( context );
+				}
+				
+				
+				GUILayout.Space( 10 );
+				GUILayout.Label("Scene To Ctx");
+				GUILayout.BeginHorizontal();
+				{
+					GUILayout.Space(20);
+					GUILayout.BeginVertical( );
+
+					foreach ( var pair in _sceneToCtxRegistry )
+					{
+						GUILayout.Label( $"{pair.Key.name} => {pair.Value.Name}" );
+					}
+					GUILayout.EndVertical( );
+				}
+				GUILayout.EndHorizontal( );
 			}
 			
 			static void DrawCtx( GameContext ctx )
@@ -222,20 +247,32 @@ namespace Flexy.Core
 				GUILayout.BeginHorizontal();
 				{
 					GUILayout.Space(20);
+					GUILayout.BeginHorizontal( );
 					GUILayout.BeginVertical();
 					{
-						foreach ( var service in ctx._registeredServices )
+						foreach ( var pair in ctx._registeredServices )
 						{
-							var instance	= "";
-							var className	= service.GetType().FullName;
-				
-							try						{ instance  = service.ToString(); }
-							catch (Exception ex)	{ Debug.LogException(ex); }
-				
-							GUILayout.Label( instance.Contains(className, StringComparison.Ordinal) ? $"{instance}" : $"{instance}({className})" );
+							var key			= pair.Key.Name;
+							var name		= pair.Value.GetType().Name;
+							
+							GUILayout.Label( key != name ? $"{key} => {name}" : $"{name}" );
 						}
 					}
 					GUILayout.EndVertical();
+					// GUILayout.Space( 100 );
+					// GUILayout.BeginVertical();
+					// {
+					// 	foreach ( var pair in ctx._registeredServices )
+					// 	{
+					// 		var name		= pair.Value.GetType().Name;
+					// 		var fullName	= pair.Value.GetType().FullName;
+					//
+					// 		GUILayout.Label( $"ns: {fullName.Replace(name, "")}" );
+					// 	}
+					// }
+					// GUILayout.EndVertical();
+					// GUILayout.FlexibleSpace();
+					GUILayout.EndHorizontal();
 				}
 				GUILayout.EndHorizontal();
 			}
@@ -247,10 +284,6 @@ namespace Flexy.Core
 	{
 		public static T GetService<T>( this GameObject context )	where T:class => context.scene.GetService<T>( );
 		public static T GetService<T>( this MonoBehaviour context )	where T:class => context.gameObject.scene.GetService<T>( );
-		public static T GetService<T>( this Scene context )			where T:class	
-		{
-			var ctx = GameContext.GetCtx( context ); 
-			return ctx != null ? ctx.GetService<T>( ) : null;
-		}
+		public static T GetService<T>( this Scene context )			where T:class => GameContext.GetCtx( context ).GetService<T>();
 	}
 }
