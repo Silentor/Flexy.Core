@@ -117,28 +117,7 @@ namespace Flexy.Core
 				return;
 			
 			var typeActual	= service.GetType();
-			var typeBase	= typeof(TBindFrom);
 			
-			//Do not work with custom base types like MonoBehEx
-			//Consider use ServiceInterfaceAttribute 
-			//if( typeBase == typeActual || typeBase == typeof(MonoBehaviour) || typeBase == typeof(Component) || typeBase == typeof(UnityEngine.Object) || typeBase == typeof(ScriptableObject) || typeBase == typeof(object) )
-			//typeBase = typeActual.BaseType;
-				
-			if( typeBase == typeof(MonoBehaviour) || typeBase == typeof(Component) || typeBase == typeof(UnityEngine.Object) || typeBase == typeof(ScriptableObject) || typeBase == typeof(object) )
-				typeBase = typeActual;
-			
-			Debug.Log	( $"[GameWorldBase] - SetService: {typeActual.Name} → {typeActual.Name}" );
-			
-			_registeredServices.Add( typeActual, service );
-			
-			if( typeBase != typeActual )     
-			{
-				Debug.Log	( $"[GameWorldBase] - SetService: {typeBase.Name} → {typeActual.Name}" );
-				
-				try						{ _registeredServices.Add( typeBase, service ); }
-				catch ( Exception ex )	{ Debug.LogException( ex ); }
-			}
-				
 			if( typeActual.GetCustomAttribute<ServiceInterfaceAttribute>( ) is {} si )
 			{
 				foreach( var serviceType in si.InterfaceType )
@@ -146,10 +125,15 @@ namespace Flexy.Core
 					if ( !serviceType.IsAssignableFrom( typeActual ) ) 
 						continue;
 					
-					Debug.Log	( $"[GameWorldBase] - SetService: {si.InterfaceType} → {typeActual.Name}" );
+					Debug.Log	( $"[GameWorldBase] - SetService: {si.InterfaceType} => {typeActual.Name}" );
 					_registeredServices.Add( serviceType, service );
 				}
-			}	
+			}
+			else
+			{
+				Debug.Log	( $"[GameWorldBase] - SetService: {typeActual.Name}" );
+				_registeredServices.Add( typeActual, service );
+			}
 		}
 		
 		private static	GameContext		CreateGlobalContext		( )													
