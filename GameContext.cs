@@ -20,7 +20,7 @@ namespace Flexy.Core
 		protected static readonly	Dictionary<Scene, GameContext>	_sceneToCtxRegistry = new ( );
 		private readonly			Dictionary<Type, Object>		_registeredServices	= new ( );
 		
-		public static	GameContext		Global					=> _global ? _global : (_global = CreateGlobalContext());
+		public static	GameContext		Global					=> _global.OrNull( ) ?? (_global = CreateGlobalContext());
 			
 		public static 	GameContext		GetCtx					( GameObject go )	=> GetCtx( go.scene );
 		public static 	GameContext		GetCtx					( Component c )		=> GetCtx( c.gameObject.scene );
@@ -263,7 +263,7 @@ namespace Flexy.Core
 		}
 		#endif
 	}
-	
+
 	public static class GameContextExt
 	{
 		public static T GetService<T>( this GameObject context )	where T:class => context.scene.GetService<T>( );
