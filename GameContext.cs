@@ -46,8 +46,18 @@ namespace Flexy.Core
 			RegisterGameScene( gameObject.scene );
 			RegisterGameScene( _global.gameObject.scene );
 			
+			if( Time.frameCount == 0 )
+			{
+				Debug.Log( $"{Time.frameCount} [GameCtx] Awake Register All Scenes to {_name}" );
+				var count = SceneManager.sceneCount;
+				for ( var i = 0; i < count; i++ )
+					RegisterGameScene( SceneManager.GetSceneAt( i ) );
+			}
+			
 			if( String.IsNullOrWhiteSpace( _name ) )
 				_name = gameObject.name;
+			
+			Debug.Log( $"{Time.frameCount} [GameCtx] Awake {_name}" );
 			
 			if( _services )
 			{
