@@ -1,12 +1,12 @@
-﻿using System;
-using UnityEngine.Assertions;
+﻿using UnityEngine.Assertions;
 
 namespace Flexy.XAsset
 {
 	[Serializable]
     public abstract class XComponent						//Base class to prevent using Unity classes as components 
     {
-		public XObject Owner {get; internal set;}
+		public XObject	Owner {get; internal set;}
+		public String	Name => Owner.Name;
 		protected internal virtual void OnValidate( XObject obj ) { }
     }
     

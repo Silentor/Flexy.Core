@@ -1,9 +1,6 @@
-﻿using System;
-using System.Collections.Generic;
-using Flexy.Core;
+﻿using Flexy.Core;
 using Flexy.JsonXs;
 using Flexy.JsonXs.Format;
-using UnityEngine;
 
 namespace Flexy.XAsset
 {
@@ -13,8 +10,14 @@ namespace Flexy.XAsset
         [SerializeField, HideInInspector]
         [JsonX(JsonXObject.C0, isInline:true), XToken(ETokenString.Bare)]
         private		String		_guid;
-        [JsonX(JsonXObject.N)]
-        public		String		Name	=> name.Trim().Replace(" ","-");
+        
+		#if !UNITY_EDITOR
+		[JsonX(JsonXObject.N)]		
+		public		String		Name	{ get => name; set => name = value; }
+		#else
+		[JsonX(JsonXObject.N)]
+		public		String		Name	=> name.Trim().Replace(" ","-");
+		#endif
         
         #if !UNITY_EDITOR
         public	    String		Guid	=> _guid;
