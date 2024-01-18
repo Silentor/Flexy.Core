@@ -111,10 +111,12 @@ namespace Flexy.XAsset
 
 	    protected virtual void OnValidate()
 	    {
-			_guid = UnityEditor.AssetDatabase.GUIDFromAssetPath( UnityEditor.AssetDatabase.GetAssetPath( this ) ).ToString( );
+			try						{ _guid = UnityEditor.AssetDatabase.GUIDFromAssetPath( UnityEditor.AssetDatabase.GetAssetPath( this ) ).ToString( ); }
+			catch( Exception ex )	{ Debug.LogException( ex ); }
 			
 		    foreach ( var component in _components )
-			    component.OnValidate( this );
+				try						{ component.OnValidate( this ); }
+				catch( Exception ex )	{ Debug.LogException( ex ); }
 	    }
 
 	    public static class Editor
