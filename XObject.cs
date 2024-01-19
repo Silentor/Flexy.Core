@@ -1,8 +1,7 @@
-﻿using Flexy.Core;
-using Flexy.JsonXs;
+﻿using Flexy.JsonXs;
 using Flexy.JsonXs.Format;
 
-namespace Flexy.XAsset
+namespace Flexy.Core
 {
     [JsonXObject(false, true, SerializeProperties = true)]
     public abstract class XObject : ScriptableObject

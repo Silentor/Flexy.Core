@@ -2,7 +2,7 @@
 using UnityEditor;
 using UnityEditor.AssetImporters;
 
-namespace Flexy.XAsset.Editor
+namespace Flexy.Core.Editor
 {
     [CustomEditor( typeof(XAssetImporter), true), CanEditMultipleObjects]
     public class XAssetImporterEditor : ScriptedImporterEditor

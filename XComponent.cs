@@ -1,6 +1,6 @@
 ﻿using UnityEngine.Assertions;
 
-namespace Flexy.XAsset
+namespace Flexy.Core
 {
 	[Serializable]
     public abstract class XComponent						//Base class to prevent using Unity classes as components 

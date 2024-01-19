@@ -1,6 +1,6 @@
 ﻿using System;
 
-namespace Flexy.XAsset;
+namespace Flexy.Core;
 
 [AttributeUsage(AttributeTargets.Class)]
 public class JsonXSerializeAttribute : Attribute { }

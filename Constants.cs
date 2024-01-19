@@ -1,6 +1,6 @@
 namespace Flexy.Core;
 
-public class Constants
+public static class Constants
 {	
 	#if UNITY_EDITOR || DEVELOPMENT_BUILD || DEBUG
 	public const Boolean	IsDevBuildOrEditor =	true;

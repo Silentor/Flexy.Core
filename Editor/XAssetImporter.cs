@@ -9,7 +9,7 @@ using UnityEditor.AssetImporters;
 using UnityEngine;
 using File = System.IO.File;
 
-namespace Flexy.XAsset.Editor
+namespace Flexy.Core.Editor
 {
 	[ScriptedImporter(1, "xasset")]
     public class XAssetImporter : ScriptedImporter

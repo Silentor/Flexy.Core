@@ -10,7 +10,7 @@ using UnityEngine;
 using UnityEngine.UIElements;
 using Object = System.Object;
 
-namespace Flexy.XAsset.Editor
+namespace Flexy.Core.Editor
 {
     [CustomEditor( typeof(XObject), true), CanEditMultipleObjects]
     public class XObjectEditor : ScriptableEditor
