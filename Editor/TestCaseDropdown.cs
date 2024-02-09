@@ -15,12 +15,12 @@ public static class TestCaseDropdown
 	{
 		UnityEditorTopToolbar.AddIMGUIContainerToRightPocket( OnTestRunGUI );
 		//EditorSceneManager.sceneClosed		+= s		=> EditorPrefs.SetString( Test_Selected, null );
-		EditorSceneManager.sceneOpened		+= (_, _)	=> EditorPrefs.SetString( Test_Selected, null );
+		EditorSceneManager.sceneOpened		+= (_, _)	=> PlayerPrefs.SetString( Test_Selected, null );
 	}
 	[RuntimeInitializeOnLoadMethod]
 	static void CleanUpRun( ) => IsTestLaunched_InThisSession = default;
 
-	private const String	Test_Selected	= "Flexy.Core.TestRun: Selected";
+	private const String	Test_Selected	= "Flexy.Core.TestCase: Selected";
 	public static Boolean	IsTestLaunched_InThisSession;
 	
 	private static List<TestRunSource> TestRunSources = new ( );
@@ -35,7 +35,7 @@ public static class TestCaseDropdown
 		if( IsTestLaunched_InThisSession )
 			return false;
 		
-		var testSelected = EditorPrefs.GetString( Test_Selected ); 
+		var testSelected = PlayerPrefs.GetString( Test_Selected ); 
 		
 		if( testSelected.StartsWith( providerName + ": " ) )
 		{
@@ -51,7 +51,7 @@ public static class TestCaseDropdown
 		var style = EditorStyles.label;
 		style.richText = true;
 		
-		var testSelected = EditorPrefs.GetString( Test_Selected );
+		var testSelected = PlayerPrefs.GetString( Test_Selected );
         
 		if( String.IsNullOrWhiteSpace( testSelected ) )
 			testSelected = "None";
@@ -59,7 +59,7 @@ public static class TestCaseDropdown
 		GUILayout.BeginHorizontal( GUI.skin.box );
 		
 		GUI.enabled = false;
-		GUILayout.Label( "Test Run:" );
+		GUILayout.Label( "Test Case:" );
 		GUI.enabled = true;
 		
 		if( EditorGUILayout.DropdownButton( new( $"{testSelected}" ), FocusType.Passive, EditorStyles.popup ) )
@@ -100,12 +100,12 @@ public static class TestCaseDropdown
 		{
 			if( userdata == null )
 			{
-				EditorPrefs.SetString( Test_Selected, null );
+				PlayerPrefs.SetString( Test_Selected, null );
 			}
 			else
 			{
 				var pair = ((String prefix, String testName))userdata;
-				EditorPrefs.SetString( Test_Selected, $"{pair.prefix}: {pair.testName}" );
+				PlayerPrefs.SetString( Test_Selected, $"{pair.prefix}: {pair.testName}" );
 			}
 		}
 	}
