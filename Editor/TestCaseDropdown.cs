@@ -9,9 +9,9 @@ using Object = System.Object;
 namespace Flexy.Core.Editor;
 
 [InitializeOnLoad]
-public static class TestRunPopup
+public static class TestCaseDropdown
 {
-	static TestRunPopup( )
+	static TestCaseDropdown( )
 	{
 		UnityEditorTopToolbar.AddIMGUIContainerToRightPocket( OnTestRunGUI );
 		//EditorSceneManager.sceneClosed		+= s		=> EditorPrefs.SetString( Test_Selected, null );
@@ -29,20 +29,22 @@ public static class TestRunPopup
 	{
 		TestRunSources.Add( new( providerName, testsCollectionProvider ) );	
 	}
-	public static String	GetTestNameToLaunch		( String providerName )	
+	public static Boolean	TryGetTestCaseToLaunch	( String providerName, out String testCase )	
 	{
+		testCase = null;
 		if( IsTestLaunched_InThisSession )
-			return null;
+			return false;
 		
 		var testSelected = EditorPrefs.GetString( Test_Selected ); 
 		
 		if( testSelected.StartsWith( providerName + ": " ) )
 		{
 			IsTestLaunched_InThisSession = true;
-			return testSelected[(providerName.Length+2)..];
+			testCase = testSelected[(providerName.Length+2)..]; 
+			return true;
 		}
 		
-		return null;
+		return false;
 	}
 	private static void		OnTestRunGUI			( )	
 	{
