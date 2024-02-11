@@ -116,6 +116,9 @@ namespace Flexy.Core
 			try						{ _guid = UnityEditor.AssetDatabase.GUIDFromAssetPath( UnityEditor.AssetDatabase.GetAssetPath( this ) ).ToString( ); }
 			catch( Exception ex )	{ Debug.LogException( ex ); }
 			
+			foreach ( var component in _components )
+				component.Owner = this;
+			
 		    foreach ( var component in _components )
 				try						{ component.OnValidate( this ); }
 				catch( Exception ex )	{ Debug.LogException( ex ); }
