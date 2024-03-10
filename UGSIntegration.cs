@@ -1,4 +1,6 @@
-﻿using Unity.Services.Core;
+﻿#if UNITY_SERVICES_CORE
+
+using Unity.Services.Core;
 
 namespace Flexy.Core
 {
@@ -20,3 +22,5 @@ namespace Flexy.Core
 		}
 	}
 }
+
+#endif

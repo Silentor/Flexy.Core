@@ -9,10 +9,24 @@ namespace Flexy.Core
 	public class GameContext : MonoBehaviour
 	{
 		[RuntimeInitializeOnLoadMethod(RuntimeInitializeLoadType.SubsystemRegistration)]
-		private static void StaticClear( ) { _global = null; _sceneToCtxRegistry.Clear( ); SceneManager.sceneUnloaded -= ClearSceneFromRegistry; SceneManager.sceneUnloaded += ClearSceneFromRegistry; }
+		private static void StaticClear( ) 
+		{
+			_global = null; 
+			_sceneToCtxRegistry.Clear( ); 
+			SceneManager.sceneUnloaded -= ClearSceneRegistration; 
+			SceneManager.sceneUnloaded += ClearSceneRegistration; 
+			
+			SceneManager.activeSceneChanged -= RegisterCreatedScene; 
+			SceneManager.activeSceneChanged += RegisterCreatedScene;
+			
+			SceneManager.sceneLoaded -= RegisterSideLoadedScene; 
+			SceneManager.sceneLoaded += RegisterSideLoadedScene;
+		}
 		
 		[SerializeField]	String			_name;
 		[SerializeField]	GameObject		_services;
+		public				Boolean			AllowAutoSceneRegistration;
+		protected			Boolean			_allowRegisterAllScenesOnFirstGameFrame;
 		
 		protected static	GameContext		_global;
 		protected			GameContext		_parent;
@@ -25,7 +39,11 @@ namespace Flexy.Core
 		public static 	GameContext		GetCtx					( GameObject go )	=> GetCtx( go.scene );
 		public static 	GameContext		GetCtx					( Component c )		=> GetCtx( c.gameObject.scene );
 		public static 	GameContext		GetCtx					( Scene scene )		=> _sceneToCtxRegistry.TryGetValue( scene, out var ctx ) ? ctx : Global;
-		public			void			RegisterGameScene		( Scene scene )		=> _sceneToCtxRegistry[scene] = this;
+		public			void			RegisterGameScene		( Scene scene )
+		{
+			Debug.Log( $"{Time.frameCount} [GameCtx] {_name} - Register scene: {scene.name}" );
+			_sceneToCtxRegistry[scene] = this;
+		}
 		
 		public String					Name					=> _name;
 		public RoDict<Type, Object>		RegisteredServices		=> _registeredServices;
@@ -35,29 +53,35 @@ namespace Flexy.Core
 			if( _global == null )
 			{
 				_global = this;
-				RegisterGameScene( gameObject.scene ); //Register before move to another scene
+				AllowAutoSceneRegistration = true;
+				_allowRegisterAllScenesOnFirstGameFrame = true;
 				DontDestroyOnLoad( gameObject );
 			}
-			else
+			else if ( _parent == null )
 			{
 				_parent = GetCtx(this);
-			}
-			
-			RegisterGameScene( gameObject.scene );
-			RegisterGameScene( _global.gameObject.scene );
-			
-			if( Time.frameCount == 0 )
-			{
-				Debug.Log( $"{Time.frameCount} [GameCtx] Awake Register All Scenes to {_name}" );
-				var count = SceneManager.sceneCount;
-				for ( var i = 0; i < count; i++ )
-					RegisterGameScene( SceneManager.GetSceneAt( i ) );
 			}
 			
 			if( String.IsNullOrWhiteSpace( _name ) )
 				_name = gameObject.name;
 			
-			Debug.Log( $"{Time.frameCount} [GameCtx] Awake {_name}" );
+			Debug.Log( $"{Time.frameCount} [GameCtx] {_name} - Awake" );
+			
+			if( AllowAutoSceneRegistration )
+			{
+				if( _allowRegisterAllScenesOnFirstGameFrame & Time.frameCount == 0 )
+				{
+					Debug.Log( $"{Time.frameCount} [GameCtx] {_name} - Register All Scenes" );
+					RegisterGameScene( _global.gameObject.scene );
+					var count = SceneManager.sceneCount;
+					for ( var i = 0; i < count; i++ )
+						RegisterGameScene( SceneManager.GetSceneAt( i ) );
+				}
+				else
+				{
+					RegisterGameScene( gameObject.scene );
+				}
+			}
 			
 			if( _services )
 			{
@@ -83,7 +107,10 @@ namespace Flexy.Core
 					}
 				}
 			}
-		}                             
+		}
+
+		
+
 		protected		void			OnDestroy				( )		
 		{
 			if ( !_parent ) 
@@ -96,6 +123,14 @@ namespace Flexy.Core
 			}
 		}
 		
+		public			void			SetName					( String newName )									
+		{
+			_name = newName;
+		}
+		public			void			SetParent				( GameContext ctx )									
+		{
+			_parent = ctx;
+		}
 		public 			void			AddServicesFromObject	( GameObject go, Boolean allHierarchy = true )		
 		{
 			var services = allHierarchy ? go.GetComponentsInChildren<MonoBehaviour>( ) : go.GetComponents<MonoBehaviour>( );  
@@ -135,13 +170,13 @@ namespace Flexy.Core
 					if ( !serviceType.IsAssignableFrom( typeActual ) ) 
 						continue;
 					
-					Debug.Log	( $"[GameWorldBase] - SetService: {si.InterfaceType} => {typeActual.Name}" );
+					Debug.Log	( $"[GameCtx] {Name} - SetService: {si.InterfaceType} => {typeActual.Name}" );
 					_registeredServices.Add( serviceType, service );
 				}
 			}
 			else
 			{
-				Debug.Log	( $"[GameWorldBase] - SetService: {typeActual.Name}" );
+				Debug.Log	( $"[GameCtx] {Name} - SetService: {typeActual.Name}" );
 				_registeredServices.Add( typeActual, service );
 			}
 		}
@@ -156,9 +191,29 @@ namespace Flexy.Core
 			
 			return ctx;
 		}
-		private static 	void			ClearSceneFromRegistry	( Scene scene )										
+		private static 	void			ClearSceneRegistration	( Scene scene )										
 		{
+			Debug.Log( $"{Time.frameCount} [GameCtx] ClearSceneRegistration {scene.name}" );
 			_sceneToCtxRegistry.Remove( scene );
+		}
+		private static 	void			RegisterCreatedScene	( Scene oldScene, Scene newScene )					
+		{
+			if( _sceneToCtxRegistry.ContainsKey( oldScene ) && !_sceneToCtxRegistry.ContainsKey( newScene ) )
+            {
+				var ctx = _sceneToCtxRegistry[oldScene];
+				Debug.Log( $"{Time.frameCount} [GameCtx] {ctx.Name} - Register created scene: {newScene.name}" );
+				ctx.RegisterGameScene( newScene );
+			}
+		}
+		private static 	void			RegisterSideLoadedScene	( Scene newScene, LoadSceneMode loadSceneMode )		
+		{
+			if( !_sceneToCtxRegistry.ContainsKey( newScene ) )
+			{
+				var scene	= SceneManager.GetActiveScene( );
+				var ctx		= _sceneToCtxRegistry[scene]; 
+				Debug.Log( $"{Time.frameCount} [GameCtx] {ctx.Name} - Register Side loaded scene: {newScene.name}" );
+				ctx.RegisterGameScene( newScene );
+			}
 		}
 		
 		public static class Internal
@@ -193,9 +248,7 @@ namespace Flexy.Core
 			if( _parent )
 			{
 				GUILayout.Space( 5 );
-				DrawCtx( this );
-				GUILayout.Space( 5 );
-				DrawCtx( _parent );
+				DrawCtxAndParentLine( this );
 			}
 			else
 			{
@@ -235,6 +288,16 @@ namespace Flexy.Core
 				GUILayout.EndHorizontal( );
 			}
 			
+			static void DrawCtxAndParentLine( GameContext ctx )
+			{
+				DrawCtx( ctx );
+				
+				if( ctx._parent != null )
+				{
+					GUILayout.Space( 5 );
+					DrawCtxAndParentLine( ctx._parent );
+				}
+			}
 			static void DrawCtx( GameContext ctx )
 			{
 				GUILayout.Label(ctx.Name);
