@@ -83,10 +83,10 @@ namespace Flexy.Core
 				}
 			}
 			
-			if( _services )
-			{
-				AddServicesFromObject( _services );
+			RegisterCtxServices( );
 			
+			if( _registeredServices.Count > 0 )
+			{
 				InitializeServices		( this );
 				InitializeAsyncServices	( this ).Forget( Debug.LogException );
 				
@@ -108,9 +108,6 @@ namespace Flexy.Core
 				}
 			}
 		}
-
-		
-
 		protected		void			OnDestroy				( )		
 		{
 			if ( !_parent ) 
@@ -131,14 +128,25 @@ namespace Flexy.Core
 		{
 			_parent = ctx;
 		}
-		public 			void			AddServicesFromObject	( GameObject go, Boolean allHierarchy = true )		
+		public 			void			RegisterCtxServices		( )													
 		{
-			var services = allHierarchy ? go.GetComponentsInChildren<MonoBehaviour>( ) : go.GetComponents<MonoBehaviour>( );  
-		
-			foreach ( var service in services )
+			foreach ( var svc in gameObject.GetComponents<IService>( ) )
+				SetService( svc );
+			
+			if( _services )
+			{
+				foreach ( var svc in gameObject.GetComponents<MonoBehaviour>( ) )
+					SetServiceImpl( svc );
+				
+				foreach ( Transform tr in _services.transform )
+					foreach ( var svc in tr.GetComponents<MonoBehaviour>( ) )
+						SetServiceImpl( svc );
+			}
+			 
+			void SetServiceImpl( MonoBehaviour service )
 			{
 				if ( !service )	//Probably script class was defined out on this platform
-					continue;
+					return;
 
 				if ( service is ServiceProvider sp )
 					sp.ProvideServices( this );
