@@ -17,7 +17,7 @@ public static class TestCaseDropdown
 		//EditorSceneManager.sceneClosed		+= s		=> EditorPrefs.SetString( Test_Selected, null );
 		EditorSceneManager.sceneOpened		+= (_, _)	=> PlayerPrefs.SetString( Test_Selected, null );
 	}
-	[RuntimeInitializeOnLoadMethod]
+	[RuntimeInitializeOnLoadMethod(RuntimeInitializeLoadType.SubsystemRegistration)]
 	static void CleanUpRun( ) => IsTestLaunched_InThisSession = default;
 
 	private const String	Test_Selected	= "Flexy.Core.TestCase: Selected";
