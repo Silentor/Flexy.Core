@@ -1,4 +1,4 @@
 ﻿namespace Flexy.Core;
 
-public interface IService		{ void		OrderedInit			( GameContext ctx ); }
-public interface IServiceAsync	{ UniTask	OrderedInitAsync	( GameContext gameWorld ); }
+public interface IService		{ void		OrderedInit			( GameContext ctx ); Int32 Order => 0; }
+public interface IServiceAsync	{ UniTask	OrderedInitAsync	( GameContext gameWorld ); Int32 Order => 0; }
