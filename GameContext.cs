@@ -135,7 +135,7 @@ namespace Flexy.Core
 			
 			if( _services )
 			{
-				foreach ( var svc in gameObject.GetComponents<MonoBehaviour>( ) )
+				foreach ( var svc in _services.GetComponents<MonoBehaviour>( ) )
 					SetServiceImpl( svc );
 				
 				foreach ( Transform tr in _services.transform )
