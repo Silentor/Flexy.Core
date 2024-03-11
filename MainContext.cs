@@ -3,8 +3,8 @@ namespace Flexy.Core
 	[DefaultExecutionOrder(Int16.MinValue+1)]
     public sealed class MainContext : GameContext
     {
-		[SerializeField] Boolean			_isSingleton;
 		[SerializeField] GlobalContext		_globalContext;
+		[SerializeField] Boolean			_isSingleton;
 		
 		//very first Awake in scene thanks to DefaultExecutionOrder
 		private new		void			Awake				( )		

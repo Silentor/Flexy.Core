@@ -25,7 +25,7 @@ namespace Flexy.Core
 		
 		[SerializeField]	String				_name;
 		[SerializeField]	GameObject			_services;
-		public				ESceneRegistration	_sceneRegistration;
+		public				ESceneRegistration	SceneRegistration;
 		
 		protected static	GameContext			_global;
 		internal			GameContext			_parent;
@@ -63,7 +63,7 @@ namespace Flexy.Core
 			if( _global == null )
 			{
 				_global = this;
-				_sceneRegistration = ESceneRegistration.Global;
+				SceneRegistration = ESceneRegistration.Global;
 				DontDestroyOnLoad( gameObject );
 			}
 			else if ( _parent == null )
@@ -76,7 +76,7 @@ namespace Flexy.Core
 			
 			Debug.Log( $"{Time.frameCount} [GameCtx] {_name} - Awake" );
 			
-			switch( _sceneRegistration )
+			switch( SceneRegistration )
 			{
 				case ESceneRegistration.Global:
 				{
