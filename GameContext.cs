@@ -23,10 +23,9 @@ namespace Flexy.Core
 			SceneManager.sceneLoaded += RegisterSideLoadedScene;
 		}
 		
-		[SerializeField]	String			_name;
-		[SerializeField]	GameObject		_services;
-		public				Boolean			AllowAutoSceneRegistration;
-		protected			Boolean			_allowRegisterAllScenesOnFirstGameFrame;
+		[SerializeField]	String				_name;
+		[SerializeField]	GameObject			_services;
+		public				ESceneRegistration	_sceneRegistration;
 		
 		protected static	GameContext		_global;
 		protected			GameContext		_parent;
@@ -53,8 +52,7 @@ namespace Flexy.Core
 			if( _global == null )
 			{
 				_global = this;
-				AllowAutoSceneRegistration = true;
-				_allowRegisterAllScenesOnFirstGameFrame = true;
+				_sceneRegistration = ESceneRegistration.Global;
 				DontDestroyOnLoad( gameObject );
 			}
 			else if ( _parent == null )
@@ -67,19 +65,28 @@ namespace Flexy.Core
 			
 			Debug.Log( $"{Time.frameCount} [GameCtx] {_name} - Awake" );
 			
-			if( AllowAutoSceneRegistration )
+			switch( _sceneRegistration )
 			{
-				if( _allowRegisterAllScenesOnFirstGameFrame & Time.frameCount == 0 )
+				case ESceneRegistration.Global:
 				{
-					Debug.Log( $"{Time.frameCount} [GameCtx] {_name} - Register All Scenes" );
+					Debug.Log( $"{Time.frameCount} [GameCtx] {_name} - Register Scenes: Global" );
 					RegisterGameScene( _global.gameObject.scene );
 					var count = SceneManager.sceneCount;
 					for ( var i = 0; i < count; i++ )
 						RegisterGameScene( SceneManager.GetSceneAt( i ) );
+					
+					break;
 				}
-				else
+				case ESceneRegistration.Local:
 				{
+					Debug.Log( $"{Time.frameCount} [GameCtx] {_name} - Register Scenes: Local" );
 					RegisterGameScene( gameObject.scene );
+					break;
+				}
+				default:
+				{
+					Debug.Log( $"{Time.frameCount} [GameCtx] {_name} - Register Scenes: None" );
+					break;
 				}
 			}
 			
@@ -178,7 +185,7 @@ namespace Flexy.Core
 					if ( !serviceType.IsAssignableFrom( typeActual ) ) 
 						continue;
 					
-					Debug.Log	( $"[GameCtx] {Name} - SetService: {si.InterfaceType} => {typeActual.Name}" );
+					Debug.Log	( $"[GameCtx] {Name} - SetService: {si.InterfaceType} => {serviceType.Name}" );
 					_registeredServices.Add( serviceType, service );
 				}
 			}
@@ -241,6 +248,13 @@ namespace Flexy.Core
 				
 				return default;
 			}
+		}
+		
+		public enum ESceneRegistration: Byte
+		{
+			Global,
+			Local,
+			None
 		}
 		
 		#if UNITY_EDITOR
