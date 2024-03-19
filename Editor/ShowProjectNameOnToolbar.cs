@@ -8,13 +8,11 @@ namespace Flexy.Core.Editor
 	{
 		static ProjectNameOnToolbar()
 		{
-			UnityEditorTopToolbar.AddIMGUIContainerToLeftPocket( OnToolbarGUI );
+			UnityEditorTopToolbar.AddIMGUIContainerToLeftPocket( OnToolbarGUI, UnityEditorTopToolbar.EPlace.Center );
 		}
 
 		static void OnToolbarGUI()
 		{
-			GUILayout.FlexibleSpace();
-
 			var style = EditorStyles.label;
 			style.richText = true;
 		
@@ -22,8 +20,6 @@ namespace Flexy.Core.Editor
 				GUILayout.Label( $"<size=16><color=#888888><b>---=== {Application.productName} ===---</b></color></size>", style );
 			else
 				GUILayout.Label( $"<size=16><color=#000000><b>---=== {Application.productName} ===---</b></color></size>", style );
-			
-			GUILayout.FlexibleSpace();
 		}
 	}
 }

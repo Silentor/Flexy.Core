@@ -13,7 +13,7 @@ public static class TestCaseDropdown
 {
 	static TestCaseDropdown( )
 	{
-		UnityEditorTopToolbar.AddIMGUIContainerToRightPocket( OnTestRunGUI );
+		UnityEditorTopToolbar.AddIMGUIContainerToLeftPocket( OnTestRunGUI, UnityEditorTopToolbar.EPlace.Right );
 		//EditorSceneManager.sceneClosed		+= s		=> EditorPrefs.SetString( Test_Selected, null );
 		EditorSceneManager.sceneOpened		+= (_, _)	=> PlayerPrefs.SetString( Test_Selected, null );
 	}
@@ -56,13 +56,13 @@ public static class TestCaseDropdown
 		if( String.IsNullOrWhiteSpace( testSelected ) )
 			testSelected = "None";
 		
-		GUILayout.BeginHorizontal( GUI.skin.box );
+		//GUILayout.BeginHorizontal( );
 		
-		GUI.enabled = false;
-		GUILayout.Label( "Test Case:" );
-		GUI.enabled = true;
+		// GUI.enabled = false;
+		// GUILayout.Label( "Test Case:" );
+		// GUI.enabled = true;
 		
-		if( EditorGUILayout.DropdownButton( new( $"{testSelected}" ), FocusType.Passive, EditorStyles.popup ) )
+		if( EditorGUILayout.DropdownButton( new( $"{testSelected}" ), FocusType.Passive, EditorStyles.toolbarPopup ) )
 		{
 			var menu = new GenericMenu();
 			
@@ -92,9 +92,7 @@ public static class TestCaseDropdown
 			menu.ShowAsContext( );
 		}
 		
-		GUILayout.EndHorizontal( );
-		
-		GUILayout.FlexibleSpace( );
+		//GUILayout.EndHorizontal( );
 		
 		static void		SetTestRunName	( Object userdata )
 		{
