@@ -1,5 +1,4 @@
 ﻿using Flexy.JsonXs;
-using UnityEditor;
 
 namespace Flexy.Core;
 
@@ -7,6 +6,8 @@ namespace Flexy.Core;
 public struct LocString : ISerializeAsString
 {
 	public static Func<String, String> LocalizeFunc;
+	//public static String[] Localisations = new []{"key","en", "ru", "ua"};
+	public static String[] Localisations = new []{"en"};
 	
 	[SerializeField] String _key;
 
@@ -18,12 +19,32 @@ public struct LocString : ISerializeAsString
 }
 
 #if UNITY_EDITOR
-public class UIStringDrawer : PropertyDrawer
+[UnityEditor.CustomPropertyDrawer(typeof(LocString))]
+public class LocStringDrawer : UnityEditor.PropertyDrawer
 {
-	public override void OnGUI( Rect position, SerializedProperty property, GUIContent label )
+	private static Int32 _selectedLocIndex;
+	
+	public override void OnGUI( Rect position, UnityEditor.SerializedProperty property, GUIContent label )
 	{
+		position = UnityEditor.EditorGUI.PrefixLabel( position, label );
+		
+		var locStr = LocString.Localisations[_selectedLocIndex];
+		
+		var prefixPos = position;
+		var offset = locStr.Length * 10;
+		prefixPos.x -= offset;
+		prefixPos.width = offset;
+		
+		GUI.Label( prefixPos, locStr );
+		
+		var popupPos	= position;
+		popupPos.xMin	= popupPos.xMax-20;
+		
+		_selectedLocIndex = UnityEditor.EditorGUI.Popup( popupPos, _selectedLocIndex, LocString.Localisations );
+		
+		position.xMax -= 20;
 		var prop = property.FindPropertyRelative( "_key" );
-		EditorGUI.PropertyField( position, prop, label );
+		UnityEditor.EditorGUI.PropertyField( position, prop, GUIContent.none );
 	}
 }
 #endif
