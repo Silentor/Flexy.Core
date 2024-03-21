@@ -13,7 +13,7 @@ public static class TestCaseDropdown
 {
 	static TestCaseDropdown( )
 	{
-		UnityEditorTopToolbar.AddIMGUIContainerToLeftPocket( OnTestRunGUI, UnityEditorTopToolbar.EPlace.Right );
+		UnityEditorTopToolbar.AddIMGUIContainerToRightPocket( OnTestRunGUI, UnityEditorTopToolbar.EPlace.Left );
 		//EditorSceneManager.sceneClosed		+= s		=> EditorPrefs.SetString( Test_Selected, null );
 		EditorSceneManager.sceneOpened		+= (_, _)	=> PlayerPrefs.SetString( Test_Selected, null );
 	}
