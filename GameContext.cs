@@ -68,7 +68,7 @@ namespace Flexy.Core
 			}
 			else if ( _parent == null )
 			{
-				_parent = GetCtx(this);
+				_parent = transform.parent == null ? GetCtx(gameObject.scene) : GetCtx(transform.parent);
 			}
 			
 			if( String.IsNullOrWhiteSpace( _name ) )
