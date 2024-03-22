@@ -46,7 +46,7 @@ namespace Flexy.Core
 		
 		public static	GameContext		Global					=> _global.OrNull( ) ?? (_global = CreateGlobalContext());
 			
-		public static 	GameContext		GetCtx					( GameObject go )	=> go.TryGetComponent<GameContext>( out var selfCtx ) ? selfCtx : go.transform.root.TryGetComponent<GameContext>( out var rootCtx ) ? rootCtx : GetCtx( go.scene );
+		public static 	GameContext		GetCtx					( GameObject go )	=> GetCtx( go.scene );//go.TryGetComponent<GameContext>( out var selfCtx ) ? selfCtx : go.transform.root.TryGetComponent<GameContext>( out var rootCtx ) ? rootCtx : GetCtx( go.scene );
 		public static 	GameContext		GetCtx					( Component c )		=> GetCtx( c.gameObject );
 		public static 	GameContext		GetCtx					( Scene scene )		=> _sceneToCtxRegistry.TryGetValue( scene, out var ctx ) ? ctx : Global;
 		public			void			RegisterGameScene		( Scene scene )		
