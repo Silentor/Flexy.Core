@@ -1,8 +1,8 @@
-﻿using UnityEditor.SceneManagement;
+﻿#if UNITY_EDITOR
+using UnityEditor.SceneManagement;
 
 namespace Flexy.Core;
 
-#if UNITY_EDITOR
 public static class EditorGameExtensions
 {
 	private static String				_latestEditorGamePath;
