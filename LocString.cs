@@ -12,6 +12,8 @@ public struct LocString : ISerializeAsString
 	[SerializeField] String _key;
 
 	public static implicit operator String( LocString str ) => str.ToString( );
+ 	public static explicit operator LocString( String str ) => new (){ _key = str };
+  
 	public override String ToString( ) => LocalizeFunc == null ? _key : LocalizeFunc?.Invoke( _key );
 	
 	String	ISerializeAsString.ToString		( )				=> "'"+_key;
