@@ -231,23 +231,26 @@ namespace Flexy.Core.Editor
 				var index = i;
 				
 				var copy = comp.Copy();
-                
-				componentElement.Add( new IMGUIContainer( () => CompoenntHeaderIMGUI(index, copy, isComponentBased, noMainComponent, isOneComponent ) ){ name = "Header" } );
-	
-				for ( var enterChildren = true; comp.NextVisible( enterChildren ); enterChildren = false )
-				{
-					if( comp.propertyPath.StartsWith( componentPath ) )
-					{
-						if( comp.name == nameof(XObject.Components) ) 
-						{
-							/*skip draw here*/ 
-						}
-						else
-						{
-							componentElement.Add( new PropertyField(comp) { name = "PropertyField:" + comp.propertyPath } );
-						}
-					}
-				}
+                copy.Next(true);
+				var path = copy.propertyPath;
+				
+				componentElement.Add( new IMGUIContainer( () => CompoenntHeaderIMGUI(index, comp, isComponentBased, noMainComponent, isOneComponent ) ){ name = "Header" } );
+				componentElement.Add( new PropertyField(comp, "") { name = "PropertyDrawer:" + comp.propertyPath } );
+					
+				// for ( var enterChildren = true; comp.NextVisible( enterChildren ); enterChildren = false )
+				// {
+				// 	if( comp.propertyPath.StartsWith( componentPath ) )
+				// 	{
+				// 		if( comp.name == nameof(XObject.Components) ) 
+				// 		{
+				// 			/*skip draw here*/ 
+				// 		}
+				// 		else
+				// 		{
+				// 			componentElement.Add( new PropertyField(comp) { name = "PropertyField:" + comp.propertyPath } );
+				// 		}
+				// 	}
+				// }
 			}
 			
 			// Add Component Button
@@ -372,4 +375,27 @@ namespace Flexy.Core.Editor
 			return result.Distinct( ).ToArray( );
 		}
     }
+	
+	[CustomPropertyDrawer(typeof(XComponent))]
+	public class XComponentDrawer : PropertyDrawer
+	{
+		public override VisualElement CreatePropertyGUI(SerializedProperty property)
+		{
+			var copy	= property.Copy();
+			var propsVE	= new VisualElement(  ){ name = "PropsContainer" };
+	
+			if( !String.IsNullOrWhiteSpace( preferredLabel ) )
+				propsVE.Add( new Label(preferredLabel) );
+		
+			copy.NextVisible( true );
+			var depth = copy.depth;
+			do
+			{
+				propsVE.Add( new PropertyField(copy) );
+			}
+			while ( copy.NextVisible( false ) && copy.depth >= depth );
+		
+			return propsVE;
+		}
+	}
 }
