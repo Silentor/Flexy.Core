@@ -236,21 +236,6 @@ namespace Flexy.Core.Editor
 				
 				componentElement.Add( new IMGUIContainer( () => CompoenntHeaderIMGUI(index, comp, isComponentBased, noMainComponent, isOneComponent ) ){ name = "Header" } );
 				componentElement.Add( new PropertyField(comp, "") { name = "PropertyDrawer:" + comp.propertyPath } );
-					
-				// for ( var enterChildren = true; comp.NextVisible( enterChildren ); enterChildren = false )
-				// {
-				// 	if( comp.propertyPath.StartsWith( componentPath ) )
-				// 	{
-				// 		if( comp.name == nameof(XObject.Components) ) 
-				// 		{
-				// 			/*skip draw here*/ 
-				// 		}
-				// 		else
-				// 		{
-				// 			componentElement.Add( new PropertyField(comp) { name = "PropertyField:" + comp.propertyPath } );
-				// 		}
-				// 	}
-				// }
 			}
 			
 			// Add Component Button
