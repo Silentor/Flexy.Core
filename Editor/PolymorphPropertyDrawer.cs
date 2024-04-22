@@ -20,13 +20,17 @@ namespace Flexy.Core.Editor
 		private VisualElement	_propContainer;
 
         public override VisualElement CreatePropertyGUI( SerializedProperty property )
+		{
+			return CreatePropertyGUI( property, property.displayName );
+		}
+		public VisualElement CreatePropertyGUI( SerializedProperty property, String displayName )
         {
 			if ( property.propertyType != SerializedPropertyType.ManagedReference )
 				return new PropertyField( property );
 				
             var root = new VisualElement( );
 			
-			var propField	= new TextField( property.displayName );
+			var propField	= new TextField( displayName );
 			var button		= new Button( ){ text = "⦿" };
 			var propsVe		= new VisualElement(  ){ name = "PropsContainer", style = { marginLeft = 13}};
 	
@@ -43,6 +47,9 @@ namespace Flexy.Core.Editor
 			
 			var attr				= ((PlymorphAttribute)attribute);
 			var baseType			= attr?.BaseType ?? GetType( property.managedReferenceFieldTypename );
+			
+			//_prop.value				= property.managedReferenceFullTypename;
+			
 			SetupChooseItemButton( _prop, button, baseType, type => WriteNewInstanceByIndexType(type, property) );
 			
 			PopulateInnerProps( property );
@@ -64,7 +71,7 @@ namespace Flexy.Core.Editor
 
 	        void ShowDropdown()
 	        {
-		        var dropdown = new FlexyAdvancedDropdown( assignableTypes.Select(NicifyTypeName), index => onSelectedNewType( assignableTypes[index] ) );
+		        var dropdown = new FlexyAdvancedDropdown( assignableTypes.Select(NicifyTypeFullName), index => onSelectedNewType( assignableTypes[index] ) );
 		        var buttonMatrix = root.worldTransform;
 		        var position = new Vector3(buttonMatrix.m03, buttonMatrix.m13, buttonMatrix.m23);
 		        var size = root.contentRect.size;
@@ -85,7 +92,8 @@ namespace Flexy.Core.Editor
 			var parts		= typename.Split( ' ' );
 			return Type.GetType( $"{parts[1]}, {parts[0]}", false );
 		}
-		private static String		NicifyTypeName		( Type type )			=> type == null ? NullName : ObjectNames.NicifyVariableName( type.FullName );
+		private static String		NicifyTypeFullName	( Type type )			=> type == null ? NullName : ObjectNames.NicifyVariableName( type.FullName );
+		private static String		NicifyTypeName		( Type type )			=> type == null ? NullName : ObjectNames.NicifyVariableName( type.Name );
         private static List<Type>	GetAssignableTypes	( Type type )			
         {
             var nonUnityTypes	= TypeCache.GetTypesDerivedFrom(type).Where(IsAssignableNonUnityType).ToList();
@@ -135,6 +143,7 @@ namespace Flexy.Core.Editor
 			var selectedTypeName	= NicifyTypeName(selectedType);
 			_prop.value				= selectedTypeName;
 			
+			_propContainer.Unbind( );
 			_propContainer.Bind( property.serializedObject );
 		}
     }
