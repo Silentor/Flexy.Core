@@ -9,39 +9,27 @@ public struct Builder<T, TLerp> where T : unmanaged where TLerp : unmanaged, ITw
 {
 	public Builder( T from, T to, Single duration, Ease ease = Ease.InOutSine, ETweenTime tweenTime = ETweenTime.Time )
 	{
-		this			= default;
-		From			= from;
-		To				= to;
-		DurationMs		= (UInt16)Mathf.RoundToInt(duration * 1000);
-		Ease			= ease;
-		TweenTime		= tweenTime;
-		LoopsCount		= 1;
+		Data				= default;
+		Data.From			= from;
+		Data.To				= to;
+		Data.DurationMs		= (UInt16)Mathf.RoundToInt(duration * 1000);
+		Data.Ease			= ease;
+		Data.TweenTime		= tweenTime;
+		Data.LoopsCount		= 1;
 	}
 	
-	public	T				From;
-	public	T				To;
-	public	UInt16			DurationMs;
-	public	UInt16			DelayMs;
-	public	UInt16			LoopsCount;
-	public	Ease			Ease;
-	public	EDelay			DelayType;
-	public	ELoop			LoopType;
-	public	ETweenTime		TweenTime;
-	public	TLerp			Lerper;
+	internal TweenData<T, TLerp> Data;
 	
-	public	TweenBindData	BindData;
-	public	TweenCallbacks	Callbacks;
+	public	Builder<T, TLerp> WithDelay				( Single delay, EDelay	delayType	= EDelay.BeforeStart )		{ Data.DelayMs		= (UInt16)Mathf.RoundToInt(delay*1000); Data.DelayType	= delayType;	return this; }
+	public	Builder<T, TLerp> WithLoops				( UInt16 count, ELoop	loopType	= ELoop.Repeat )			{ Data.LoopsCount	= count;								Data.LoopType	= loopType;		return this; }
 	
-	public	Builder<T, TLerp> WithDelay				( Single delay, EDelay	delayType	= EDelay.BeforeStart )		{ DelayMs		= (UInt16)Mathf.RoundToInt(delay*1000); DelayType	= delayType;	return this; }
-	public	Builder<T, TLerp> WithLoops				( UInt16 count, ELoop	loopType	= ELoop.Repeat )			{ LoopsCount	= count;								LoopType	= loopType;		return this; }
+	public	Builder<T, TLerp> OnComplete			( Action callback )			{ Data.Callbacks.Completed	= callback;		return this; }
+	public	Builder<T, TLerp> OnCancel				( Action callback )			{ Data.Callbacks.Canceled	= callback;		return this; }
 	
-	public	Builder<T, TLerp> OnComplete			( Action callback )			{ Callbacks.Completed	= callback;		return this; }
-	public	Builder<T, TLerp> OnCancel				( Action callback )			{ Callbacks.Canceled	= callback;		return this; }
-	
-	public	Builder<T, TLerp> BindTo				(							Action<T>				evaluator )	{ BindData = TweenBindData.Create( evaluator );				return this; }
-	public	Builder<T, TLerp> BindTo<TO1>			( TO1 o1,					Action<TO1,T>			evaluator )	{ BindData = TweenBindData.Create( o1, evaluator );			return this; }
-	public	Builder<T, TLerp> BindTo<TO1, TO2>		( TO1 o1, TO2 o2,			Action<TO1,TO2,T>		evaluator )	{ BindData = TweenBindData.Create( o1, o2, evaluator );		return this; }
-	public	Builder<T, TLerp> BindTo<TO1, TO2, TO3>	( TO1 o1, TO2 o2, TO3 o3,	Action<TO1,TO2,TO3,T>	evaluator )	{ BindData = TweenBindData.Create( o1, o2, o3, evaluator );	return this; }
+	public	Builder<T, TLerp> BindTo				(							Action<T>				evaluator )	{ Data.BindData = TweenBindData.Create( evaluator );				return this; }
+	public	Builder<T, TLerp> BindTo<TO1>			( TO1 o1,					Action<TO1,T>			evaluator )	{ Data.BindData = TweenBindData.Create( o1, evaluator );			return this; }
+	public	Builder<T, TLerp> BindTo<TO1, TO2>		( TO1 o1, TO2 o2,			Action<TO1,TO2,T>		evaluator )	{ Data.BindData = TweenBindData.Create( o1, o2, evaluator );		return this; }
+	public	Builder<T, TLerp> BindTo<TO1, TO2, TO3>	( TO1 o1, TO2 o2, TO3 o3,	Action<TO1,TO2,TO3,T>	evaluator )	{ Data.BindData = TweenBindData.Create( o1, o2, o3, evaluator );	return this; }
 	
 	public	TweenHandle Run( ) => TweenBackend.Ref.Run( this );
 }
@@ -67,6 +55,23 @@ public enum		ELoop : byte
 public interface ITweenLerper<T> where T: unmanaged		
 { 
 	public T Lerp( T a, T b, Single t ); 
+}
+
+public struct TweenData<T, TLerp> where T : unmanaged where TLerp : unmanaged, ITweenLerper<T>
+{
+	public	T				From;
+	public	T				To;
+	public	UInt16			DurationMs;
+	public	UInt16			DelayMs;
+	public	UInt16			LoopsCount;
+	public	Ease			Ease;
+	public	EDelay			DelayType;
+	public	ELoop			LoopType;
+	public	ETweenTime		TweenTime;
+	public	TLerp			Lerper;
+	
+	public	TweenBindData	BindData;
+	public	TweenCallbacks	Callbacks;
 }
 
 public struct TweenHandle

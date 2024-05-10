@@ -85,12 +85,12 @@
 					var t = _tweens[i];
 					if ( t.Data.LoopsCount == 0 ) //Empty
 					{
-						_tweens[i] = new() { Data = tween, CurrentValue = tween.From, Version = _tweens[i].Version };
+						_tweens[i] = new() { Data = tween.Data, CurrentValue = tween.Data.From, Version = _tweens[i].Version };
 						return new(){ Id = id, SubId = _tweens.Count - 1, Version = _tweens[i].Version };
 					}
 				}
 				
-				_tweens.Add( new() { Data = tween, CurrentValue = tween.From, Version = 1 } );
+				_tweens.Add( new() { Data = tween.Data, CurrentValue = tween.Data.From, Version = 1 } );
 				return new(){ Id = id, SubId = _tweens.Count - 1, Version = 1 };
 			}
 			public override		void			Update		( )							
@@ -218,7 +218,7 @@
 			
 			private struct Tween
 			{
-				public Builder<T, TLerp>	Data;
+				public TweenData<T, TLerp>	Data;
 				public T					CurrentValue;
 				public Single				t;
 				public Int32				Version;
