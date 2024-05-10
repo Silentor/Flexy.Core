@@ -32,13 +32,13 @@ namespace Flexy.Core
 		private readonly	List<GameContext>	_children = new(4);
 		private				EventBusHub			_localEventBus;
 		
-		protected 			SystemGroup 		_group_EarlyUpdate;
-		protected 			SystemGroup 		_group_FixedUpdateFirst;
-		protected 			SystemGroup 		_group_FixedUpdateLast;
-		protected 			SystemGroup 		_group_UpdateFirst;
-		protected 			SystemGroup 		_group_UpdateLast;
-		protected 			SystemGroup 		_group_LateUpdateFirst;
-		protected 			SystemGroup 		_group_LateUpdateLast;
+		protected 			FlexySystemGroup 		_group_EarlyUpdate;
+		protected 			FlexySystemGroup 		_group_FixedUpdateFirst;
+		protected 			FlexySystemGroup 		_group_FixedUpdateLast;
+		protected 			FlexySystemGroup 		_group_UpdateFirst;
+		protected 			FlexySystemGroup 		_group_UpdateLast;
+		protected 			FlexySystemGroup 		_group_LateUpdateFirst;
+		protected 			FlexySystemGroup 		_group_LateUpdateLast;
 
 		private static readonly		Dictionary<Scene, GameContext>	_sceneToCtxRegistry = new ( );
 		private readonly			Dictionary<Type, Object>		_registeredServicesDict	= new ( );
@@ -227,11 +227,11 @@ namespace Flexy.Core
 		{
 			_localEventBus = new( );
 		}
-		public			void			AddSystem				( ESystemGroup group, System system )				
+		public			void			AddSystem				( ESystemGroup group, FlexySystem system )				
 		{
 			GetGroupByEnum( group ).Systems.Add( system );
 		}
-		public			void			RemoveSystem			( ESystemGroup group, System system )				
+		public			void			RemoveSystem			( ESystemGroup group, FlexySystem system )				
 		{
 			var g = GetGroupByEnum( group );
 			g.Systems.Remove( system );
@@ -317,7 +317,7 @@ namespace Flexy.Core
 			}
 		}
 		
-		private			SystemGroup		GetGroupByEnum			( ESystemGroup group )								
+		private			FlexySystemGroup		GetGroupByEnum			( ESystemGroup group )								
 		{
 			return group switch
 			{

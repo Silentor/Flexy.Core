@@ -2,14 +2,14 @@
 
 namespace Flexy.Core;
 
-public class SystemGroup : System
+public class FlexySystemGroup : FlexySystem
 {
-	public SystemGroup( String name ) { _name = name; }
+	public FlexySystemGroup( String name ) { _name = name; }
 
-	private List<System> _systems = new( );
+	private List<FlexySystem> _systems = new( );
 
 	public String					Name	=> _name;
-	public List<System>	Systems	=> _systems;
+	public List<FlexySystem>	Systems	=> _systems;
 
 	public Single					LastRunUpdateTime	=> _lastRunUpdateTime;
 	public Int32					LastRunUpdateFrame	=> _lastRunUpdateFrame;

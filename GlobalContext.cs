@@ -86,7 +86,7 @@ namespace Flexy.Core
 			// }
 			// GUILayout.EndHorizontal();
 			
-			static void DrawGroup( SystemGroup group )
+			static void DrawGroup( FlexySystemGroup group )
 			{
 				if( group == null )
 					return;
@@ -108,7 +108,7 @@ namespace Flexy.Core
 					{
 						foreach ( var worldSystem in group.Systems )
 						{
-							if( worldSystem is SystemGroup g )
+							if( worldSystem is FlexySystemGroup g )
 							{
 								DrawGroup( g );
 							}

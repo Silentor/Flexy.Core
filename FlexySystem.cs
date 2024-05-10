@@ -3,7 +3,7 @@ using UnityEngine.Profiling;
 
 namespace Flexy.Core;
 
-public abstract class System
+public abstract class FlexySystem
 {
 	protected String		_name;
 	protected Single		_lastRunUpdateTime;
