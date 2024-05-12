@@ -6,7 +6,7 @@
 		[SerializeField]	Animator	_animator;
 		[SerializeField]	String		_stateName;
 		
-		public override async UniTask DoAsync( FCtx ctx )
+		public override async UniTask DoAsync( ActionCtx ctx )
 		{
 			_animator.Play( _stateName, 0 );
 			

@@ -3,64 +3,85 @@
 	[Serializable]
 	public struct FlexyEvent
 	{
+		// Maker Flexy Event to be special MessageBus event tied to GdiId and working with actions and triggers 
+		// Move Flexy Event logic into FlexyAction Extension Functions 
+		
 		[SerializeReference] FlexyAction	_action;
 		
-		public void		Raise( MonoBehaviour source )	
+		public FlexyAction Action => _action;
+	}
+	
+	public static class FlexyActionExtensions
+	{
+		public static UniTask Raise( this FlexyEvent @event, Component ctxObj )
 		{
-			var ctx = new FCtx{ Source = source };
-			_action.Do( ref ctx );
+			return Raise( @event.Action, ctxObj );
 		}
-		public void		Raise( ref FCtx ctx )			
+		public static UniTask Raise( this FlexyAction action, Component ctxObj )
 		{
-			_action.Do( ref ctx );
+			if( action == null )
+				return UniTask.CompletedTask;
+			
+			return action.GuardedDoAsync( ActionCtx.Rent( ctxObj ) );
+		}
+		public static async UniTask GuardedDoAsync( this FlexyAction action, ActionCtx ctx )
+		{
+			try
+			{
+				ctx.IncreaseRef( );
+				await action.DoAsync( ctx );
+			}
+			finally
+			{
+				ctx.DecreaseRef( );
+			}
 		}
 	}
 	
 	[Serializable]
 	public abstract class FlexyAction
 	{
-		public abstract void	Do		( ref FCtx ctx );
-		public abstract UniTask	DoAsync	( FCtx ctx );
-		public abstract void	Sample	( ref FCtx ctx, Single time01 );
+		public abstract void Do(ActionCtx ctx);
+		public abstract UniTask	DoAsync	( ActionCtx ctx );
+		public abstract void Sample(ActionCtx ctx, Single time01);
 	}
 	
 	[Serializable]
 	public abstract class FlexyActionSync : FlexyAction
 	{
-		public sealed override		void		Sample	( ref FCtx ctx, Single time01 )		{ if( time01 == 0 ) Do( ref ctx ); if( time01 == 1 ) DoBack( ref ctx ); }
-		public abstract override	void		Do		( ref FCtx ctx );
-		public virtual 				void		DoBack	( ref FCtx ctx )		{ }
-		public sealed override		UniTask		DoAsync	( FCtx ctx )			{ Do( ref ctx ); return default; }
+		public sealed override void Sample(ActionCtx ctx, Single time01)		{ if( time01 == 0 ) Do( ctx ); if( time01 == 1 ) DoBack( ctx ); }
+		public abstract override void Do(ActionCtx ctx);
+		public virtual void DoBack(ActionCtx ctx)		{ }
+		public sealed override		UniTask		DoAsync	( ActionCtx ctx )			{ Do( ctx ); return default; }
 	}
 	
 	[Serializable]
 	public abstract class FlexyActionAsync : FlexyAction
 	{
-		public sealed override		void		Sample	( ref FCtx ctx, Single time01 )		{ if( time01 == 0 ) Do( ref ctx ); }
-		public abstract override	UniTask		DoAsync	( FCtx ctx );
-		public sealed override		void		Do		( ref FCtx ctx )		{ DoAsync( ctx ).Forget( Debug.LogException ); }
+		public sealed override void Sample(ActionCtx ctx, Single time01)		{ if( time01 == 0 ) Do( ctx ); }
+		public abstract override	UniTask		DoAsync	( ActionCtx ctx );
+		public sealed override void Do(ActionCtx ctx) => this.GuardedDoAsync( ctx ).Forget( Debug.LogException );
 	}
 	
 	[Serializable]
 	public abstract class FlexyActionSample : FlexyAction
 	{
 		public LerpAndTimeData LerpAndTime;	
-		public FCtx _ctx;
 		
-		public abstract override	void		Sample	( ref FCtx ctx, Single time01 );
-		public sealed override		void		Do		( ref FCtx ctx )		{ DoAsync( ctx ).Forget( Debug.LogException ); }
-		public sealed async override UniTask	DoAsync	( FCtx ctx )		
+		public abstract override void Sample(ActionCtx ctx, Single time01);
+		public sealed override void Do(ActionCtx ctx) => this.GuardedDoAsync( ctx ).Forget( Debug.LogException );
+		
+		public sealed async override UniTask	DoAsync	( ActionCtx ctx )		
 		{
-			_ctx = ctx;
 			var timeEnd = Time.time + LerpAndTime.Length;
 
-			Sample( ref _ctx, 0 );
+			Sample( ctx, 0 );
 			while( Time.time < timeEnd )
 			{
 				await UniTask.DelayFrame( 1 );
-				Sample( ref _ctx, 1 - (Time.time - timeEnd) / LerpAndTime.Length );
+				Sample( ctx, 1 - (Time.time - timeEnd) / LerpAndTime.Length );
 			}
-			Sample( ref _ctx, 1 );
+			Sample( ctx, 1 );
 		}
 		
 		[Serializable]
@@ -128,12 +149,62 @@
 		public static	Single		UInt64_Single	( UInt64	data )		=> data;
 	}
 	
-	public record struct FCtx
+	public class ActionCtx
 	{
-		public	MonoBehaviour		Source;
+		public	Component			CtxObj;
 		public	Object				RefValue;
 		public	Int32				IntValue;
 		public	Single				FloatValue;
+
+		private Int32				_refCounter;
+		
+		public void IncreaseRef()
+		{
+			_refCounter++;
+		}
+		public void DecreaseRef()
+		{
+			_refCounter--;
+			
+			if( _refCounter <= 0 )
+				Release( this );
+		}
+		
+		private ActionCtx( ) { }
+		
+		private static List<ActionCtx> _ctxPool = new( );
+		
+		public static ActionCtx Rent( Component ctxObj )
+		{
+			var ctx = default(ActionCtx);
+			
+			if( _ctxPool.Count == 0 )
+			{
+				ctx = new( );
+			}
+			else
+			{
+				ctx = _ctxPool[^1];
+				_ctxPool.RemoveAt( _ctxPool.Count-1 );
+			}
+			
+			ctx.CtxObj = ctxObj;
+			return ctx;
+		}
+		
+		private static void Release( ActionCtx ctx )
+		{
+			ctx.Clear( );
+			_ctxPool.Add( ctx );
+		}
+		
+		private void Clear( )
+		{
+			CtxObj		= null;
+			RefValue	= null;
+			IntValue	= 0;
+			FloatValue	= 0;
+		}
 	}
 	
 	// public class FCtxBig 

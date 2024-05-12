@@ -7,7 +7,7 @@ public struct FTween { }
 
 public struct Builder<T, TLerp> where T : unmanaged where TLerp : unmanaged, ITweenLerper<T>
 {
-	public Builder( T from, T to, Single duration, Ease ease = Ease.InOutSine, ETweenTime tweenTime = ETweenTime.Time )
+	public Builder( T from, T to, Single duration, Ease ease = Ease.InOutSine, ETime tweenTime = ETime.DeltaTime )
 	{
 		Data				= default;
 		Data.From			= from;
@@ -27,18 +27,18 @@ public struct Builder<T, TLerp> where T : unmanaged where TLerp : unmanaged, ITw
 	public	Builder<T, TLerp> OnCancel				( Action callback )			{ Data.Callbacks.Canceled	= callback;		return this; }
 	
 	public	Builder<T, TLerp> BindTo				(							Action<T>				evaluator )	{ Data.BindData = TweenBindData.Create( evaluator );				return this; }
-	public	Builder<T, TLerp> BindTo<TO1>			( TO1 o1,					Action<TO1,T>			evaluator )	{ Data.BindData = TweenBindData.Create( o1, evaluator );			return this; }
-	public	Builder<T, TLerp> BindTo<TO1, TO2>		( TO1 o1, TO2 o2,			Action<TO1,TO2,T>		evaluator )	{ Data.BindData = TweenBindData.Create( o1, o2, evaluator );		return this; }
-	public	Builder<T, TLerp> BindTo<TO1, TO2, TO3>	( TO1 o1, TO2 o2, TO3 o3,	Action<TO1,TO2,TO3,T>	evaluator )	{ Data.BindData = TweenBindData.Create( o1, o2, o3, evaluator );	return this; }
+	public	Builder<T, TLerp> BindTo<TO1>			( TO1 o1,					Action<TO1,T>			evaluator )	{ Data.BindData = TweenBindData.Create( evaluator, o1 );			return this; }
+	public	Builder<T, TLerp> BindTo<TO1, TO2>		( TO1 o1, TO2 o2,			Action<TO1,TO2,T>		evaluator )	{ Data.BindData = TweenBindData.Create( evaluator, o1, o2 );		return this; }
+	public	Builder<T, TLerp> BindTo<TO1, TO2, TO3>	( TO1 o1, TO2 o2, TO3 o3,	Action<TO1,TO2,TO3,T>	evaluator )	{ Data.BindData = TweenBindData.Create( evaluator, o1, o2, o3 );	return this; }
 	
 	public	TweenHandle Run( ) => TweenBackend.Ref.Run( this );
 }
 
-public enum		ETweenTime : byte
+public enum		ETime : byte
 {
-	Time			= 0,
-	UnscaledTime	= 1,
-//	Realtime		= 2,
+	DeltaTime			= 0,
+	UnscaledDeltaTime	= 1,
+//	Realtime			= 2,
 }
 public enum		EDelay : byte
 {
@@ -67,7 +67,7 @@ public struct TweenData<T, TLerp> where T : unmanaged where TLerp : unmanaged, I
 	public	Ease			Ease;
 	public	EDelay			DelayType;
 	public	ELoop			LoopType;
-	public	ETweenTime		TweenTime;
+	public	ETime		TweenTime;
 	public	TLerp			Lerper;
 	
 	public	TweenBindData	BindData;
@@ -113,9 +113,9 @@ public struct TweenBindData
 		switch ( StateCount )
 		{
 			case 0: UnsafeUtility.As<Object, Action<TValue>>						( ref _bindedAction )?.Invoke( value );							break;
-			case 1: UnsafeUtility.As<Object, Action<TValue, Object>>				( ref _bindedAction )?.Invoke( value, State1 );					break;
-			case 2: UnsafeUtility.As<Object, Action<TValue, Object, Object>>		( ref _bindedAction )?.Invoke( value, State1, State2 );			break;
-			case 3: UnsafeUtility.As<Object, Action<TValue, Object, Object, Object>>( ref _bindedAction )?.Invoke( value, State1, State2, State3 );	break;
+			case 1: UnsafeUtility.As<Object, Action<Object, TValue>>				( ref _bindedAction )?.Invoke( State1, value );					break;
+			case 2: UnsafeUtility.As<Object, Action<Object, Object, TValue>>		( ref _bindedAction )?.Invoke( State1, State2, value );			break;
+			case 3: UnsafeUtility.As<Object, Action<Object, Object, Object, TValue>>( ref _bindedAction )?.Invoke( State1, State2, State3, value );	break;
 		}
 	}
 }

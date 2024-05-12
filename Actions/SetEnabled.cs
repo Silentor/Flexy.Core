@@ -6,7 +6,7 @@
 		[SerializeField] MonoBehaviour	_target;
 		[SerializeField] Boolean		_enabled;
 		
-		public override void Do( ref FCtx ctx )
+		public override void Do(ActionCtx ctx)
 		{
 			_target.enabled = _enabled;
 		}

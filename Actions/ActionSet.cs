@@ -1,37 +1,43 @@
-﻿namespace Flexy.Core.Actions;
+﻿using System.Linq;
+using UnityEngine.Serialization;
 
-[Serializable]
-public class ActionSet : FlexyAction
+namespace Flexy.Core.Actions
 {
-	[SerializeField]		Boolean			_sync;
-	[SerializeReference]	FlexyAction[]	_set;
-	
-	
-	public override void Do(ref FCtx ctx)
+	[Serializable]
+	public class ActionSet: FlexyActionAsync
 	{
-		if( !_sync )
+		[FormerlySerializedAs("Type")] 
+		[SerializeField]		EType			Run;
+		[SerializeReference]	FlexyAction[]	Actions;
+		
+		public override async UniTask DoAsync	( ActionCtx ctx )
 		{
-			DoAsync( ctx ).Forget( );
+			switch (Run)
+			{
+				case EType.Sequential:
+				{
+					foreach ( var act in Actions )
+						try						{ await act.DoAsync( ctx ); }
+						catch ( Exception ex )	{ Debug.LogException( ex ); }
+					
+					break;
+				}
+
+				case EType.Simultanously:
+				{
+					try						{ await UniTask.WhenAll( Enumerable.Select(Actions, a => a.DoAsync( ctx ) ).ToArray( ) ); }
+					catch ( Exception ex )	{ Debug.LogException( ex ); }
+					break;
+				}
+
+				default: throw new ArgumentOutOfRangeException();
+			}
 		}
-		else
+
+		private enum EType 
 		{
-			foreach ( var action in _set )
-				action.Do( ref ctx );
+			Sequential,
+			Simultanously,
 		}
 	}
-	
-	public override async UniTask DoAsync(FCtx ctx)
-	{
-		if( _sync )
-		{
-			Do( ref ctx );
-		}
-		else
-		{
-			foreach ( var action in _set )
-				await action.DoAsync( ctx );
-		}
-	}
-	
-	public override void Sample( ref FCtx ctx, Single time01 ) { Do( ref ctx ); }
 }

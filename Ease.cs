@@ -63,7 +63,7 @@ public static class EaseUtility
 	{
 		return ease switch
 		{
-			Ease.SCurve		=> Linear		( t ),
+			Ease.SCurve		=> SCurve		( t ),
 			Ease.Linear		=> Linear		( t ),
 			Ease.InSine		=> InSine		( t ),
 			Ease.OutSine	=> OutSine		( t ),
