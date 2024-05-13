@@ -177,23 +177,16 @@ namespace Flexy.Core.Editor
 			var inlineFields	= attr != null ? attr.FieldNames : Array.Empty<String>( );
 			
 			var copy	= property.Copy( );
-			
-			if( copy.NextVisible( true ) )
+			var depth	= copy.depth + 1;
+
+			for ( var i = 0; copy.NextVisible( i==0 ) && copy.depth >= depth; i++ )
 			{
-				var depth	= copy.depth;
-				var i		= 0;
-				do 
-				{
-					var putInline = !copy.isArray && ( i < 4 || inlineFields.Contains( copy.name ) );
-					if( putInline )
-						_propsInline.Add( new PropertyField(copy, String.Empty) );//{ style = { flexGrow = 1f} } );
-					
-					else
-						_propsBlock.Add( new PropertyField(copy) );
-					
-					i++;
-				}
-				while ( copy.NextVisible( false ) && copy.depth >= depth );
+				var putInline = (!copy.isArray || copy.propertyType == SerializedPropertyType.String) && ( i < 4 || inlineFields.Contains( copy.name ) );
+				if( putInline )
+					_propsInline.Add( new PropertyField(copy, String.Empty) );//{ style = { flexGrow = 1f} } );
+				
+				else
+					_propsBlock.Add( new PropertyField(copy) );
 			}
 			
 			SetFieldName( _propField );

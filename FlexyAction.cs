@@ -1,22 +1,40 @@
 ﻿namespace Flexy.Core
 {
 	[Serializable]
+	public struct FlexyMsg
+	{
+		// [SerializeField] GdiId _msgId;
+		// Type for passing messages into message bus tied to GdiId 
+		
+		// Place it ingo Flexy Gdi
+	}
+	
+	[Serializable]
 	public struct FlexyEvent
 	{
-		// Maker Flexy Event to be special MessageBus event tied to GdiId and working with actions and triggers 
-		// Move Flexy Event logic into FlexyAction Extension Functions 
+		// Make it event that raise all subscribers surrounded with try catch
+		// Create CodeSubscribersAction and excapsulate action in case of subscribe call from code
 		
 		[SerializeReference] FlexyAction	_action;
 		
-		public FlexyAction Action => _action;
+		public UniTask Raise( Component ctxObj ) => _action.Raise( ctxObj );
+		
+		public event Action Fired
+		{
+			add{}
+			remove{}
+		}
+		public event Action<ActionCtx> FiredCtx
+		{
+			add{}
+			remove{}
+		}
+		// Add ability to subscribe and unsubscribe to event from code with different sugnatures
+		// Action, Action<ActionCtx>
 	}
 	
 	public static class FlexyActionExtensions
 	{
-		public static UniTask Raise( this FlexyEvent @event, Component ctxObj )
-		{
-			return Raise( @event.Action, ctxObj );
-		}
 		public static UniTask Raise( this FlexyAction action, Component ctxObj )
 		{
 			if( action == null )
