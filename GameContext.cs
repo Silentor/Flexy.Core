@@ -72,7 +72,7 @@ namespace Flexy.Core
 			}
 			
 			if( String.IsNullOrWhiteSpace( _name ) )
-				_name = gameObject.name;
+				_name = gameObject.name + "Ctx";
 			
 			Debug.Log( $"{Time.frameCount} [GameCtx] {_name} - Awake" );
 			
