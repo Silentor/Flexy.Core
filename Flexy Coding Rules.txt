@@ -1,3 +1,15 @@
+Clean Architecture  MA-VMV:     https://blog.cleancoder.com/uncle-bob/2012/08/13/the-clean-architecture.html
+ Mostly server(host) side:
+   [M]  Model (Entities) 		- pure data with methods for changing it  
+   [A]  Aspect (Use Cases)		- business logic that act on many models to provide service  
+ 
+ client-server transport & sync
+ 
+ Mostly client side
+   [VM] ViewModel (Presenters)	- logic coupled to view that prepare data for view, update view, get input from view 
+   [V]  View (Frameworks) 		- view layer that do actual visualisation of model using data state transformed by ViewModel
+
+
 CUPID for joyful coding          https://dannorth.net/2022/02/10/cupid-for-joyful-coding/
 
 Composable: 		Does the class/method/function have any dependencies that aren't strictly necessary? If so, how can we remove them, or externalise them and make them optional?
